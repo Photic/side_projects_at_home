@@ -1,0 +1,276 @@
+package templates
+
+import (
+	"strconv"
+	"github.com/Photic/side_projects_at_home/internal/models"
+)
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ title }</title>
+		<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+		<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+		<script src="/static/js/app.js"></script>
+	</head>
+	<body class="bg-gray-100">
+		<nav class="bg-blue-600 text-white p-4">
+			<div class="container mx-auto">
+				<h1 class="text-2xl font-bold">Home Automation Dashboard</h1>
+				<div class="mt-2">
+					<a href="/" class="mr-4 hover:underline">Tasks</a>
+					<a href="/devices" class="mr-4 hover:underline">Devices</a>
+				</div>
+			</div>
+		</nav>
+		<main class="container mx-auto py-8">
+			{ children... }
+		</main>
+	</body>
+	</html>
+}
+
+templ TasksPage(tasks []models.Task) {
+	@Layout("Home Automation - Tasks") {
+		<div class="max-w-4xl mx-auto">
+			<div class="bg-white rounded-lg shadow-md p-6">
+				<div class="flex justify-between items-center mb-6">
+					<h2 class="text-3xl font-bold text-gray-800">Tasks</h2>
+					<button 
+						class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+						hx-get="/tasks/new"
+						hx-target="#modal"
+						hx-swap="innerHTML"
+					>
+						Add New Task
+					</button>
+				</div>
+				
+				<div id="task-list" class="space-y-4">
+					for _, task := range tasks {
+						@TaskCard(task)
+					}
+				</div>
+			</div>
+		</div>
+		
+		<div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"></div>
+	}
+}
+
+templ TaskCard(task models.Task) {
+	<div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500" id={ "task-" + strconv.Itoa(task.ID) }>
+		<div class="flex items-center justify-between">
+			<div class="flex-1">
+				<h3 class={ "text-lg font-semibold", templ.KV("line-through text-gray-500", task.Completed) }>
+					{ task.Title }
+				</h3>
+				if task.Description != "" {
+					<p class="text-gray-600 mt-1">{ task.Description }</p>
+				}
+				<p class="text-sm text-gray-400 mt-2">
+					Created: { task.CreatedAt.Format("Jan 2, 2006 15:04") }
+				</p>
+			</div>
+			<div class="flex space-x-2">
+				<button 
+					class={ "px-3 py-1 rounded text-sm", 
+						templ.KV("bg-green-200 text-green-800", task.Completed),
+						templ.KV("bg-gray-200 text-gray-800", !task.Completed) }
+					hx-post={ "/tasks/" + strconv.Itoa(task.ID) + "/toggle" }
+					hx-target={ "#task-" + strconv.Itoa(task.ID) }
+					hx-swap="outerHTML"
+				>
+					if task.Completed {
+						Mark Incomplete
+					} else {
+						Mark Complete
+					}
+				</button>
+				<button 
+					class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+					hx-delete={ "/tasks/" + strconv.Itoa(task.ID) }
+					hx-target={ "#task-" + strconv.Itoa(task.ID) }
+					hx-swap="outerHTML"
+					hx-confirm="Are you sure you want to delete this task?"
+				>
+					Delete
+				</button>
+			</div>
+		</div>
+	</div>
+}
+
+templ NewTaskForm() {
+	<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+		<div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+			<div class="mt-3">
+				<h3 class="text-lg font-bold text-gray-900 mb-4">Add New Task</h3>
+				<form hx-post="/tasks" hx-target="#task-list" hx-swap="afterbegin">
+					<div class="mb-4">
+						<label class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+						<input 
+							type="text" 
+							name="title" 
+							required
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+						/>
+					</div>
+					<div class="mb-4">
+						<label class="block text-gray-700 text-sm font-bold mb-2">Description</label>
+						<textarea 
+							name="description" 
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-24"
+						></textarea>
+					</div>
+					<div class="flex items-center justify-between">
+						<button 
+							type="submit" 
+							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+						>
+							Create Task
+						</button>
+						<button 
+							type="button" 
+							class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+							onclick="document.getElementById('modal').classList.add('hidden')"
+						>
+							Cancel
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+}
+
+templ DevicesPage(devices []models.Device) {
+	@Layout("Home Automation - Devices") {
+		<div class="max-w-4xl mx-auto">
+			<div class="bg-white rounded-lg shadow-md p-6">
+				<div class="flex justify-between items-center mb-6">
+					<h2 class="text-3xl font-bold text-gray-800">Devices</h2>
+					<button 
+						class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+						hx-get="/devices/new"
+						hx-target="#modal"
+						hx-swap="innerHTML"
+					>
+						Add New Device
+					</button>
+				</div>
+				
+				<div id="device-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					for _, device := range devices {
+						@DeviceCard(device)
+					}
+				</div>
+			</div>
+		</div>
+		
+		<div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"></div>
+	}
+}
+
+templ DeviceCard(device models.Device) {
+	<div class="bg-gray-50 p-4 rounded-lg shadow" id={ "device-" + strconv.Itoa(device.ID) }>
+		<div class="flex items-center justify-between mb-2">
+			<h3 class="text-lg font-semibold">{ device.Name }</h3>
+			<span class={ "px-2 py-1 rounded text-xs font-bold",
+				templ.KV("bg-green-200 text-green-800", device.Status == "online"),
+				templ.KV("bg-red-200 text-red-800", device.Status == "offline"),
+				templ.KV("bg-yellow-200 text-yellow-800", device.Status == "maintenance") }>
+				{ device.Status }
+			</span>
+		</div>
+		<p class="text-gray-600 text-sm mb-1">Type: { device.Type }</p>
+		<p class="text-gray-600 text-sm mb-3">Location: { device.Location }</p>
+		<div class="flex space-x-2">
+			if device.Status == "offline" {
+				<button 
+					class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex-1"
+					hx-post={ "/devices/" + strconv.Itoa(device.ID) + "/status" }
+					hx-vals='{"status": "online"}'
+					hx-target={ "#device-" + strconv.Itoa(device.ID) }
+					hx-swap="outerHTML"
+				>
+					Turn On
+				</button>
+			} else {
+				<button 
+					class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 flex-1"
+					hx-post={ "/devices/" + strconv.Itoa(device.ID) + "/status" }
+					hx-vals='{"status": "offline"}'
+					hx-target={ "#device-" + strconv.Itoa(device.ID) }
+					hx-swap="outerHTML"
+				>
+					Turn Off
+				</button>
+			}
+		</div>
+	</div>
+}
+
+templ NewDeviceForm() {
+	<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+		<div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+			<div class="mt-3">
+				<h3 class="text-lg font-bold text-gray-900 mb-4">Add New Device</h3>
+				<form hx-post="/devices" hx-target="#device-list" hx-swap="afterbegin">
+					<div class="mb-4">
+						<label class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+						<input 
+							type="text" 
+							name="name" 
+							required
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+						/>
+					</div>
+					<div class="mb-4">
+						<label class="block text-gray-700 text-sm font-bold mb-2">Type</label>
+						<select 
+							name="type" 
+							required
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+						>
+							<option value="">Select Type</option>
+							<option value="light">Light</option>
+							<option value="sensor">Sensor</option>
+							<option value="switch">Switch</option>
+							<option value="thermostat">Thermostat</option>
+							<option value="camera">Camera</option>
+						</select>
+					</div>
+					<div class="mb-4">
+						<label class="block text-gray-700 text-sm font-bold mb-2">Location</label>
+						<input 
+							type="text" 
+							name="location" 
+							required
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+							placeholder="e.g., Living Room, Kitchen"
+						/>
+					</div>
+					<div class="flex items-center justify-between">
+						<button 
+							type="submit" 
+							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+						>
+							Create Device
+						</button>
+						<button 
+							type="button" 
+							class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+							onclick="document.getElementById('modal').classList.add('hidden')"
+						>
+							Cancel
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+}
