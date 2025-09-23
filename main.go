@@ -9,6 +9,7 @@ import (
 	"github.com/robfig/cron/v3"
 
 	"side_projects_at_home/src/control"
+	"side_projects_at_home/src/model"
 	"side_projects_at_home/src/router"
 )
 
@@ -34,9 +35,9 @@ func scheduledJob() {
 
 	loan, _ := sqlite.GetLoan(loanID)
 
-	add_interest := loan.Amount * 0.035
+	add_interest := (loan.Amount * 0.035) / 365.25
 
-	_ = sqlite.InsertAmount(loanID, add_interest)
+	_ = sqlite.InsertAmount(loanID, add_interest, model.TxTypeInterest)
 	log.Printf("Added Interest: %f to LoanID: %s", add_interest, loanID)
 }
 
@@ -89,8 +90,7 @@ func main() {
 	})
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		// no favicon for now
-		w.WriteHeader(http.StatusNoContent)
+		http.ServeFile(w, r, "assets/favicon.ico")
 	})
 
 	// Serve static files from the "assets" directory at "/assets/"
@@ -98,5 +98,9 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	log.Info().Msg("Listening on 0.0.0.0:8080")
-	http.ListenAndServe("0.0.0.0:8080", nil)
+	err = http.ListenAndServe("0.0.0.0:8080", nil)
+
+	if err != nil {
+		log.Error().Msgf("Could not start server, error: %s", err)
+	}
 }

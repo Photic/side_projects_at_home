@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/phuslu/log"
 
 	"side_projects_at_home/src/model"
 )
@@ -23,13 +24,18 @@ var (
 
 func getSqlitePath() (string, error) {
 	configDir, err := os.UserConfigDir()
+
 	if err != nil {
+		log.Error().Msgf("%s", err)
 		return "", err
 	}
+
 	dbDir := filepath.Join(configDir, "side_projects")
+
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return "", err
 	}
+
 	return filepath.Join(dbDir, "database.sqlite"), nil
 }
 
@@ -44,6 +50,7 @@ func poolConnector() (*sqlx.DB, error) {
 		sqlitePool, err = sqlx.Open("sqlite3", dbPath)
 
 		if err != nil {
+			log.Error().Msgf("%s", err)
 			return
 		}
 
@@ -54,6 +61,7 @@ func poolConnector() (*sqlx.DB, error) {
 			CREATE TABLE IF NOT EXISTS loans (
 				id TEXT PRIMARY KEY,
 				amount REAL NOT NULL,
+				payed REAL NOT NULL,
 				initial REAL NOT NULL
 			);
 		`
@@ -62,6 +70,7 @@ func poolConnector() (*sqlx.DB, error) {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				loan_id TEXT NOT NULL,
 				amount REAL NOT NULL,
+				type TEXT NOT NULL,
 				date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 				FOREIGN KEY (loan_id) REFERENCES loans(id)
 			);
@@ -75,41 +84,76 @@ func poolConnector() (*sqlx.DB, error) {
 
 func SqliteConnector() (*Sqlite, error) {
 	pool, err := poolConnector()
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return &Sqlite{pool: pool}, nil
 }
 
-func (s *Sqlite) InsertAmount(id string, amount float64) error {
-	var currentAmount float64
-	err := s.pool.Get(&currentAmount, "SELECT amount FROM loans WHERE id = ?", id)
+func (s *Sqlite) InsertAmount(id string, amount float64, tx_type model.TxType) error {
+	var currentAmount, payed float64
+
+	row := s.pool.QueryRowx("SELECT amount, payed FROM loans WHERE id = ?", id)
+	err := row.Scan(&currentAmount, &payed)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
 	if err == sql.ErrNoRows {
 		// Insert new loan
-		_, err = s.insertIntoLoans(id, amount, amount)
+		_, err = s.insertIntoLoans(id, amount, amount, 0.0)
 		if err != nil {
+			log.Error().Msg("Could not insert into loans")
 			return err
 		}
+
+		// We have no row initially ofcourse.
 		currentAmount = 0.0
+		payed = 0.0
+
+		if err := s.updateLoan(id, currentAmount+amount, 0.0); err != nil {
+			return err
+		}
+
+		if err := s.insertIntoHistory(id, amount, tx_type); err != nil {
+			return err
+		}
+
+		return nil
 	} else if err != nil {
 		return err
 	}
-	newAmount := currentAmount + amount
-	if err := s.updateLoan(id, newAmount); err != nil {
+
+	if err := s.updateLoan(id, currentAmount+amount, payed+amount); err != nil {
 		return err
 	}
-	if err := s.insertIntoHistory(id, amount); err != nil {
+
+	if err := s.insertIntoHistory(id, amount, tx_type); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (s *Sqlite) GetTransactionsPage(offset, limit int64) ([]model.TransactionHistory, error) {
 	rows := []model.TransactionHistory{}
+
 	err := s.pool.Select(&rows, `
 		SELECT id, loan_id, amount, date FROM transaction_history
 		ORDER BY date DESC
 		LIMIT ? OFFSET ?`, limit, offset)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
 	return rows, err
 }
 
@@ -127,23 +171,45 @@ func (s *Sqlite) GetLatestTransactions(id string) ([]model.TransactionHistory, e
 
 func (s *Sqlite) GetLoan(id string) (model.Loan, error) {
 	var loan model.Loan
-	err := s.pool.Get(&loan, "SELECT id, amount, initial FROM loans WHERE id = ?", id)
-	if err == sql.ErrNoRows {
-		return model.Loan{ID: "", Amount: 0, Initial: 0}, nil
+	err := s.pool.Get(&loan, "SELECT id, amount, payed, initial FROM loans WHERE id = ?", id)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
 	}
+
+	if err == sql.ErrNoRows {
+		return model.Loan{ID: "", Amount: 0, Payed: 0, Initial: 0}, nil
+	}
+
 	return loan, err
 }
 
-func (s *Sqlite) insertIntoLoans(id string, amount, initial float64) (sql.Result, error) {
-	return s.pool.Exec("INSERT OR REPLACE INTO loans (id, amount, initial) VALUES (?, ?, ?)", id, amount, initial)
+func (s *Sqlite) insertIntoLoans(id string, amount, payed, initial float64) (sql.Result, error) {
+	obj, err := s.pool.Exec("INSERT OR REPLACE INTO loans (id, amount, payed, initial) VALUES (?, ?, ?, ?)", id, amount, payed, initial)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
+	return obj, err
 }
 
-func (s *Sqlite) updateLoan(id string, amount float64) error {
-	_, err := s.pool.Exec("UPDATE loans SET amount = ? WHERE id = ?", amount, id)
+func (s *Sqlite) updateLoan(id string, amount float64, payed float64) error {
+	_, err := s.pool.Exec("UPDATE loans SET amount = ?, payed = ? WHERE id = ?", amount, payed, id)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
 	return err
 }
 
-func (s *Sqlite) insertIntoHistory(id string, amount float64) error {
-	_, err := s.pool.Exec("INSERT INTO transaction_history (loan_id, amount) VALUES (?, ?)", id, amount)
+func (s *Sqlite) insertIntoHistory(id string, amount float64, tx_type model.TxType) error {
+	_, err := s.pool.Exec("INSERT INTO transaction_history (loan_id, amount, type) VALUES (?, ?, ?)", id, amount, tx_type)
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+
 	return err
 }

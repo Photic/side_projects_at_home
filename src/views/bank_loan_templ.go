@@ -61,33 +61,33 @@ func BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) t
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-8\"><div class=\"flex flex-col gap-8\"><div class=\"flex flex-col\"><h3>Total</h3><h4>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-8\"><div class=\"flex flex-col gap-8\"><div class=\"flex flex-col\"><div><h3>Total</h3><h4>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(formatEuro(loan.Amount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 43, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 44, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " kr</h4><h5>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " kr</h4></div><div class=\"mt-8\"><h3>Paid</h3><h5>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(formatEuro(loan.Initial))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(formatEuro(loan.Payed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 46, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 52, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " kr</h5></div><form hx-put=\"/loan/update\" hx-target=\"#content\" class=\"flex flex-col\"><input name=\"amount\" class=\"input input-info w-full\" type=\"number\" step=\"any\" placeholder=\"Amount\" inputmode=\"numeric\"><div class=\"flex flex-row justify-between mt-8\"><button name=\"action\" value=\"withdraw\" class=\"btn btn-warning\" type=\"submit\">Withdrawl</button> <button name=\"action\" value=\"pay\" class=\"btn btn-success\" type=\"submit\">Pay</button></div></form><div><ul class=\"flex flex-col items-center gap-2 w-full\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " kr</h5></div></div><form hx-put=\"/loan/update\" hx-target=\"#content\" class=\"flex flex-col\"><input name=\"amount\" class=\"input input-info w-full\" type=\"number\" step=\"any\" placeholder=\"Amount\" inputmode=\"numeric\"><div class=\"flex flex-row justify-between mt-8\"><button name=\"action\" value=\"withdraw\" class=\"btn btn-warning\" type=\"submit\">Withdrawl</button> <button name=\"action\" value=\"deposit\" class=\"btn btn-success\" type=\"submit\">Deposit</button></div></form><div><ul class=\"flex flex-col items-center gap-2 w-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -100,7 +100,7 @@ func BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) t
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(formatEuro(tx.Amount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 61, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 68, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -113,7 +113,7 @@ func BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) t
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(tx.Date)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 61, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 68, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -131,7 +131,7 @@ func BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) t
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(formatEuro(tx.Amount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 65, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 72, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) t
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(tx.Date)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 65, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `src/views/bank_loan.templ`, Line: 72, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {

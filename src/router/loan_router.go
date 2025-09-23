@@ -7,6 +7,7 @@ import (
 	"github.com/phuslu/log"
 
 	"side_projects_at_home/src/control"
+	"side_projects_at_home/src/model"
 	"side_projects_at_home/src/views"
 )
 
@@ -30,7 +31,7 @@ func PUTUpdateLoan(sqlite *control.Sqlite) http.HandlerFunc {
 		amountStr := request.FormValue("amount")
 		action := request.FormValue("action")
 
-		log.Debug().Msgf("POST Amount: %s, as Action: %s", amountStr, action)
+		log.Debug().Msgf("PUT Amount: %s, as Action: %s", amountStr, action)
 
 		amount, err := strconv.ParseFloat(amountStr, 64)
 
@@ -39,7 +40,7 @@ func PUTUpdateLoan(sqlite *control.Sqlite) http.HandlerFunc {
 				amount = -amount
 			}
 
-			_ = sqlite.InsertAmount(loanId, amount)
+			_ = sqlite.InsertAmount(loanId, amount, model.TxType(action))
 		}
 
 		renderLoanPage(writer, request, sqlite, loanId)

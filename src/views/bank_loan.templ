@@ -36,21 +36,28 @@ templ BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) 
 	<div class="p-8">
 		<div class="flex flex-col gap-8">
 			<div class="flex flex-col">
-				<h3>
-					Total
-				</h3>
-				<h4>
-					{ formatEuro(loan.Amount) } kr
-				</h4>
-				<h5>
-					{ formatEuro(loan.Initial) } kr
-				</h5>
+				<div>
+					<h3>
+						Total
+					</h3>
+					<h4>
+						{ formatEuro(loan.Amount) } kr
+					</h4>
+				</div>
+				<div class="mt-8">
+					<h3>
+						Paid
+					</h3>
+					<h5>
+						{ formatEuro(loan.Payed) } kr
+					</h5>
+				</div>
 			</div>
 			<form hx-put="/loan/update" hx-target="#content" class="flex flex-col">
 				<input name="amount" class="input input-info w-full" type="number" step="any" placeholder="Amount" inputmode="numeric"/>
 				<div class="flex flex-row justify-between mt-8">
 					<button name="action" value="withdraw" class="btn btn-warning" type="submit">Withdrawl</button>
-					<button name="action" value="pay" class="btn btn-success" type="submit">Pay</button>
+					<button name="action" value="deposit" class="btn btn-success" type="submit">Deposit</button>
 				</div>
 			</form>
 			<div>
