@@ -1,0 +1,73 @@
+package views
+
+import (
+	"fmt"
+	"side_projects_at_home/src/model"
+	"strings"
+)
+
+func formatEuro(n float64) string {
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+
+	s := fmt.Sprintf("%.2f", n)
+	parts := strings.Split(s, ".")
+	intPart := parts[0]
+	decPart := parts[1]
+
+	// Insert . as thousand separator
+	var out []byte
+	for i, c := range intPart {
+		if i > 0 && (len(intPart)-i)%3 == 0 {
+			out = append(out, '.')
+		}
+		out = append(out, byte(c))
+	}
+
+	if neg {
+		return "-" + string(out) + "," + decPart
+	}
+	return string(out) + "," + decPart
+}
+
+templ BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) {
+	<div class="p-8">
+		<div class="flex flex-col gap-8">
+			<div class="flex flex-col">
+				<h3>
+					Total
+				</h3>
+				<h4>
+					{ formatEuro(loan.Amount) } kr
+				</h4>
+				<h5>
+					{ formatEuro(loan.Initial) } kr
+				</h5>
+			</div>
+			<form hx-put="/loan/update" hx-target="#content" class="flex flex-col">
+				<input name="amount" class="input input-info w-full" type="number" step="any" placeholder="Amount" inputmode="numeric"/>
+				<div class="flex flex-row justify-between mt-8">
+					<button name="action" value="withdraw" class="btn btn-warning" type="submit">Withdrawl</button>
+					<button name="action" value="pay" class="btn btn-success" type="submit">Pay</button>
+				</div>
+			</form>
+			<div>
+				<ul class="flex flex-col items-center gap-2 w-full">
+					for _, tx := range transaction_history {
+						if tx.Amount > 0 {
+							<li class="text-center w-full bg-green-400">
+								{ formatEuro(tx.Amount) } kr - { tx.Date }
+							</li>
+						} else {
+							<li class="text-center w-full bg-red-400">
+								{ formatEuro(tx.Amount) } kr - { tx.Date }
+							</li>
+						}
+					}
+				</ul>
+			</div>
+		</div>
+	</div>
+}
