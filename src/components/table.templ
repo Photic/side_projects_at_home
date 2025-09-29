@@ -1,0 +1,39 @@
+package components
+
+import "side_projects_at_home/src/model"
+
+// 	for _, tx := range transaction_history {
+// 		if tx.Amount > 0 {
+// 			<li class="text-center w-full bg-green-400">
+// 				{ formatEuro(tx.Amount) } kr - { tx.Date }
+// 			</li>
+// 		} else {
+// 			<li class="text-center w-full bg-red-400">
+// 				{ formatEuro(tx.Amount) } kr - { tx.Date }
+// 			</li>
+// 		}
+// 	}
+templ Table(data model.TableData) {
+	<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+		<table class="table">
+			<thead>
+				<tr>
+					for _, header := range data.Headers {
+						<th>{ header }</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				for _, row := range data.Rows {
+					<tr>
+						for _, cell := range row {
+							<td>
+								{ cell }
+							</td>
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}

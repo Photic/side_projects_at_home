@@ -1,0 +1,13 @@
+package components
+
+func background(bg ...string) string {
+	var bgStyle string
+	if len(bg) > 0 && bg[0] != "" {
+		bgStyle = " background-image: url(" + bg[0] + ");"
+	}
+	return bgStyle
+}
+
+templ DashboardTile(text string, bg ...string) {
+	<button class="w-full aspect-square flex items-center justify-center btn btn--bg-cover" style={ "width:100% !important; height:auto !important; aspect-ratio:1 / 1; ", background(bg...) }>{ text }</button>
+}

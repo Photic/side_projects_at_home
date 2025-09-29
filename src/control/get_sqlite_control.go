@@ -161,7 +161,7 @@ func (s *Sqlite) GetLatestTransactions(id string) ([]model.TransactionHistory, e
 	rows := []model.TransactionHistory{}
 
 	err := s.pool.Select(&rows, `
-		SELECT id, loan_id, amount, date FROM transaction_history
+		SELECT id, loan_id, amount, type, date FROM transaction_history
 		WHERE loan_id = ?
 		ORDER BY date DESC
 		LIMIT 5`, id)

@@ -1,0 +1,12 @@
+package views
+
+import "side_projects_at_home/src/components"
+
+templ Dashboard() {
+	<div class="grid grid-cols-2 gap-4 p-4">
+		@components.DashboardTile("Bolig Lån", "/assets/toppng.com-mass-effect-female-shepard-armor-807x1182.png")
+		@components.DashboardTile("Kalender", "/assets/toppng.com-cute-clipart-cute-animal-clipart-cute-pigs-baby-pig-cartoo-693x795.png")
+		@components.DashboardTile("Kalender1")
+		@components.DashboardTile("Kalender2")
+	</div>
+}

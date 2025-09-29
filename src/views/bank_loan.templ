@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"side_projects_at_home/src/components"
 	"side_projects_at_home/src/model"
 	"strings"
 )
@@ -61,19 +62,20 @@ templ BankLoan(loan model.Loan, transaction_history []model.TransactionHistory) 
 				</div>
 			</form>
 			<div>
-				<ul class="flex flex-col items-center gap-2 w-full">
-					for _, tx := range transaction_history {
-						if tx.Amount > 0 {
-							<li class="text-center w-full bg-green-400">
-								{ formatEuro(tx.Amount) } kr - { tx.Date }
-							</li>
-						} else {
-							<li class="text-center w-full bg-red-400">
-								{ formatEuro(tx.Amount) } kr - { tx.Date }
-							</li>
-						}
-					}
-				</ul>
+				// <ul class="flex flex-col items-center gap-2 w-full">
+				// 	for _, tx := range transaction_history {
+				// 		if tx.Amount > 0 {
+				// 			<li class="text-center w-full bg-green-400">
+				// 				{ formatEuro(tx.Amount) } kr - { tx.Date }
+				// 			</li>
+				// 		} else {
+				// 			<li class="text-center w-full bg-red-400">
+				// 				{ formatEuro(tx.Amount) } kr - { tx.Date }
+				// 			</li>
+				// 		}
+				// 	}
+				// </ul>
+				@components.Table(model.BuildTableData(transaction_history))
 			</div>
 		</div>
 	</div>

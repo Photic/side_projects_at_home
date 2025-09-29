@@ -75,8 +75,11 @@ func main() {
 	cron_job.Start()
 	// Schedular End
 
-	http.HandleFunc("/", middleware(router.GETLoanPage(sqlite), http.MethodGet))
+	// ? Router
+	http.HandleFunc("/", middleware(router.GETDashboardPage(), http.MethodGet))
+	http.HandleFunc("/loan", middleware(router.GETLoanPage(sqlite), http.MethodGet))
 	http.HandleFunc("/loan/update", middleware(router.PUTUpdateLoan(sqlite), http.MethodPut))
+	// ? Router End
 
 	// Live reload websocket endpoint
 	http.HandleFunc("/live-reload-ws", func(w http.ResponseWriter, r *http.Request) {
